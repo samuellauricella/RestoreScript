@@ -1,0 +1,48 @@
+#!/bin/bash
+
+
+input=$1
+restoreItem=$HOME/.restore.info
+trashCan=$HOME/deleted
+absolutePath=$(grep -w ^$1 $restoreItem)
+fileName=$(echo $absolutePath | cut -d":" -f1)
+originPath=$(echo $absolutePath | cut -d":" -f2)
+uniquePath=$( echo $absolutePath | cut -d" " -f1)
+slimPath=$( echo $uniquePath | cut -d":" -f2)
+
+function fileExistCheck(){
+	if [ -z $input  ]
+		then
+			echo "Missing Operand"
+	elif  [[  $trashCan/$input ]]
+		then
+			fileAlreadyInPath
+	else
+		echo "restore: cannot restore '${fileName}': No such file or directory"
+	fi
+}
+
+function fileAlreadyInPath(){
+		if [ ! -e $trashCan/$input  ]
+			then
+				echo "restore: Cannot restore '${input}': No such file or firectory"
+		elif [ -e $slimPath ]
+			then
+				read -p "Do you wish to overwrite? y/n: " response
+					case $response in
+						[yY]* )
+							echo "File restored"
+							mv -T $trashCan/$fileName $slimPath
+							sed -i -e "/$input/d" $HOME/.restore.info	;;
+						[nN]* ) echo 'no' ;  exit ;;
+							*) echo "please enter valid response" ;;
+					esac
+		else
+			echo "File restored"
+			sed -i -e "/$input/d" $HOME/.restore.info
+			mv -T $trashCan/$fileName $slimPath 
+		fi
+}
+
+
+fileExistCheck
